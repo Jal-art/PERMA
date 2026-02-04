@@ -19,6 +19,7 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
+
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
@@ -27,11 +28,16 @@
         radial-gradient(900px 600px at 85% 20%, rgba(124,92,255,.20), transparent 55%),
         linear-gradient(180deg, #070a14, var(--bg));
       color:var(--text);
-      overflow:hidden;
+
+      /* ✅ SCROLL HALAMAN NYALA */
+      overflow:auto;
+
+      /* ✅ iOS smooth scroll */
+      -webkit-overflow-scrolling: touch;
     }
 
     .wrap{
-      height:100%;
+      min-height:100%;
       display:grid;
       place-items:center;
       padding:18px;
@@ -289,10 +295,6 @@
       line-height:1.45;
       transition:.2s ease;
     }
-    textarea:focus{
-      border-color: rgba(255,106,162,.45);
-      box-shadow:0 0 0 4px rgba(255,106,162,.14);
-    }
 
     .row{
       display:flex;
@@ -337,7 +339,7 @@
       transform:translateX(-50%) translateY(-4px);
     }
 
-    /* ===== AKHIRAN (DITAMBAH) ===== */
+    /* ===== AKHIRAN ===== */
     #ending{
       position:fixed;
       inset:0;
@@ -371,17 +373,13 @@
   <div class="wrap">
     <div class="stage">
 
-      <!-- ICON MESSAGE -->
       <div class="mail" id="mail" title="Klik buat buka">
         <div class="body"></div>
         <div class="ping" id="ping"></div>
         <div class="flap"></div>
         <div class="letter-peek">
           <div class="peek-lines">
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
+            <div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div>
           </div>
         </div>
       </div>
@@ -390,7 +388,6 @@
         <button class="primary" id="openBtn">Buka Pesan </button>
       </div>
 
-      <!-- SURAT (bukan chat) -->
       <div class="letterShell" id="letterShell">
         <div class="letterTop">
           <div class="who">
@@ -409,7 +406,6 @@
           </div>
         </div>
 
-        <!-- BALASAN + KIRIM WA -->
         <div class="replyWrap" id="replyWrap">
           <div class="hint">
             Tulis balasan kamu. Nanti kekirim ke wa hehehe
@@ -427,7 +423,6 @@
 
   <div class="toast" id="toast">OK</div>
 
-  <!-- ===== AKHIRAN (DITAMBAH) ===== -->
   <div id="ending" aria-hidden="true">
     <div class="card">
       <h2>Makasih ya 🤍</h2>
@@ -441,15 +436,11 @@
   </div>
 
   <script>
-    // =========================
-    // WA TARGET: GANTI NOMOR LO
-    // format internasional tanpa + dan tanpa spasi
-    // contoh: 6281234567890
-    // =========================
-    const YOUR_WA_NUMBER = "6281234567890";
+    // ✅ nomor WA tujuan (nomor kamu)
+    const YOUR_WA_NUMBER = "6282119757264"; // ganti kalau perlu
 
     const CONFIG = {
-      to: "Aghisna Irfa Arnas (sayangku)",
+      to: "Aghisna Irfa Arnas",
       from: "Aku si raja iblis vaneither hahaahah",
       letter: [
         "Hai sayang…",
@@ -490,7 +481,6 @@
     const copyLetterBtn = $("copyLetterBtn");
     const copyReplyBtn = $("copyReplyBtn");
 
-    // akhiran
     const ending = $("ending");
     const endClose = $("endClose");
     const endAgain = $("endAgain");
@@ -503,9 +493,8 @@
       setTimeout(()=>toast.classList.remove("show"), 1300);
     }
 
-    // ✅ FIX: pakai YOUR_WA_NUMBER beneran
     function openWhatsApp(message){
-      const url = `https://wa.me/${6282119757264}?text=${encodeURIComponent(message)}`;
+      const url = `https://wa.me/${YOUR_WA_NUMBER}?text=${encodeURIComponent(message)}`;
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isMobile) location.href = url;
       else window.open(url, "_blank", "noopener,noreferrer");
@@ -517,11 +506,10 @@
     async function typeLetter(fullText){
       paperText.textContent = "";
       caret.style.display = "inline-block";
-      status.textContent = "ketik…";
+      status.textContent = "mengetik…";
 
       for (let i = 0; i < fullText.length; i++){
         paperText.textContent += fullText[i];
-        paperText.parentElement.scrollTop = 999999; // tetep sesuai versi lu
         await sleep(rand(CONFIG.typingSpeed.min, CONFIG.typingSpeed.max));
       }
 
@@ -546,7 +534,9 @@
 
       await sleep(CONFIG.afterDoneDelay);
       replyWrap.classList.add("show");
-      replyText.focus({ preventScroll:true });
+
+      // ✅ biar kebawa scroll ke reply area otomatis
+      replyWrap.scrollIntoView({ behavior: "smooth", block: "start" });
 
       running = false;
     }
@@ -575,12 +565,6 @@
     });
 
     sendBtn.addEventListener("click", () => {
-      // ✅ ini tetep logika lu, cuma sekarang bener pakai YOUR_WA_NUMBER
-      if (!6282119757264 || 6282119757264 === "6282119757264"){
-        showToast("Ganti dulu nomor WA kamu di kode 🙂");
-        return;
-      }
-
       const v = (replyText.value || "").trim();
       if (!v){
         showToast("Balasan masih kosong 🙂");
@@ -594,7 +578,6 @@ ${v}`;
       showToast("Buka WhatsApp…");
       openWhatsApp(lastPayload);
 
-      // ✅ tampilkan akhiran
       setTimeout(() => {
         ending.classList.add("show");
         ending.setAttribute("aria-hidden","false");
@@ -611,7 +594,6 @@ ${v}`;
       openWhatsApp(lastPayload);
     });
 
-    // klik area gelap untuk nutup
     ending.addEventListener("click", (e) => {
       if (e.target === ending){
         ending.classList.remove("show");
